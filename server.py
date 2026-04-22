@@ -17,7 +17,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ⚠️ use /tmp for JSON (still temporary, but works for now)
 DB_FILE = "/tmp/posts.json"
 
 
@@ -51,10 +50,11 @@ async def create_post(
 
         filename = f"{int(datetime.now().timestamp()*1000)}_{file.filename}"
 
+        content = await file.read()
 
         blob = put(
             f"uploads/{filename}",
-            file.file,
+            content,
         )
 
         print("BLOB URL:", blob.url)
@@ -74,5 +74,5 @@ async def create_post(
         return post
 
     except Exception as e:
-        print("ERROR:", str(e))   # 🔥 THIS IS IMPORTANT
+        print("ERROR:", str(e)) 
         return {"error": str(e)}
