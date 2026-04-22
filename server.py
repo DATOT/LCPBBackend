@@ -37,7 +37,6 @@ def save_posts(posts):
 def get_posts():
     return load_posts()
 
-
 @app.post("/posts")
 async def create_post(
     title: str = Form(...),
@@ -45,27 +44,36 @@ async def create_post(
     author: Optional[str] = Form(None),
     file: UploadFile = File(...)
 ):
-    posts = load_posts()
+    try:
+        print("START UPLOAD")
 
-    # 🔥 upload file to Vercel Blob
-    filename = f"{int(datetime.now().timestamp()*1000)}_{file.filename}"
+        posts = load_posts()
 
-    blob = put(
-        f"uploads/{filename}",   # path in blob
-        file.file,               # file stream
-        access="public"
-    )
+        filename = f"{int(datetime.now().timestamp()*1000)}_{file.filename}"
 
-    post = {
-        "id": int(datetime.now().timestamp() * 1000),
-        "title": title,
-        "description": description or "",
-        "author": author or "Ẩn Danh",
-        "image": blob.url,   # ✅ THIS is the big change
-        "date": datetime.now().isoformat(),
-    }
 
-    posts.insert(0, post)
-    save_posts(posts)
+        blob = put(
+            f"uploads/{filename}",
+            file.file,
+            access="public"
+        )
 
-    return post
+        print("BLOB URL:", blob.url)
+
+        post = {
+            "id": int(datetime.now().timestamp() * 1000),
+            "title": title,
+            "description": description or "",
+            "author": author or "Ẩn Danh",
+            "image": blob.url,
+            "date": datetime.now().isoformat(),
+        }
+
+        posts.insert(0, post)
+        save_posts(posts)
+
+        return post
+
+    except Exception as e:
+        print("ERROR:", str(e))   # 🔥 THIS IS IMPORTANT
+        return {"error": str(e)}
