@@ -57,14 +57,14 @@ async def create_post(
             content,
         )
 
-        print("BLOB URL:", blob.url)
+        print("BLOB URL:", blob["url"])
 
         post = {
             "id": int(datetime.now().timestamp() * 1000),
             "title": title,
             "description": description or "",
             "author": author or "Ẩn Danh",
-            "image": blob.url,
+            "image": blob["url"],
             "date": datetime.now().isoformat(),
         }
 
