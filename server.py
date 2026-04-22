@@ -62,7 +62,7 @@ async def create_post(
         "title": title,
         "description": description or "",
         "author": author or "Ẩn Danh",
-        "image": f"http://localhost:8000/uploads/{filename}",
+        "image": f"https://lcpb-backend-s83m.vercel.app/uploads/{filename}",
         "date": datetime.now().isoformat(),
     }
 
