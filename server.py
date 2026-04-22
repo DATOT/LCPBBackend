@@ -55,7 +55,6 @@ async def create_post(
         blob = put(
             f"uploads/{filename}",
             file.file,
-            access="public"
         )
 
         print("BLOB URL:", blob.url)
