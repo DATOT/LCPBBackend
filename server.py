@@ -1,23 +1,24 @@
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from typing import Optional
 import json
 import os
-import shutil
 from datetime import datetime
+
+from vercel_blob import put
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # allow all
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
-DB_FILE = "posts.json"
+
+# ⚠️ use /tmp for JSON (still temporary, but works for now)
+DB_FILE = "/tmp/posts.json"
 
 
 def load_posts():
@@ -37,9 +38,6 @@ def get_posts():
     return load_posts()
 
 
-UPLOAD_DIR = "uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
 @app.post("/posts")
 async def create_post(
     title: str = Form(...),
@@ -48,21 +46,22 @@ async def create_post(
     file: UploadFile = File(...)
 ):
     posts = load_posts()
-    print("title:", title)
-    print("author:", author)
-    print("file:", file.filename)
-    filename = f"{int(datetime.now().timestamp()*1000)}_{file.filename}"
-    filepath = os.path.join(UPLOAD_DIR, filename)
 
-    with open(filepath, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    # 🔥 upload file to Vercel Blob
+    filename = f"{int(datetime.now().timestamp()*1000)}_{file.filename}"
+
+    blob = put(
+        f"uploads/{filename}",   # path in blob
+        file.file,               # file stream
+        access="public"
+    )
 
     post = {
         "id": int(datetime.now().timestamp() * 1000),
         "title": title,
         "description": description or "",
         "author": author or "Ẩn Danh",
-        "image": f"https://lcpb-backend-s83m.vercel.app/uploads/{filename}",
+        "image": blob.url,   # ✅ THIS is the big change
         "date": datetime.now().isoformat(),
     }
 
